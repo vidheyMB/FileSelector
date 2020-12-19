@@ -141,12 +141,13 @@ class FileSelectorActivity : AppCompatActivity() {
 
                // If data is null check outputFileUri
                val uri = if(data!=null) data.data else outputFileUri
-
+               // File extension
+               val fileExtension = uri?.path?.substringAfterLast(".")
                // convert uri to base64 string
                GlobalScope.launch {
                   val base64String = convertToString(uri!!)
                     // callback interface
-                   fileSelectorCallBack.onResponse(base64String)
+                   fileSelectorCallBack.onResponse(base64String, fileExtension!!)
                    // finish activity
                    finish()
                }

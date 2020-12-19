@@ -14,7 +14,7 @@ class MainActivity : AppCompatActivity() {
 
         file_selector.setOnClickListener {
             FileSelector.open(this, object : FileSelectorCallBack {
-                override fun onResponse(response: String) {
+                override fun onResponse(response: String, extension: String) {
                     Log.d("TAG_Test", "onResponse: $response")
                 }
             })
