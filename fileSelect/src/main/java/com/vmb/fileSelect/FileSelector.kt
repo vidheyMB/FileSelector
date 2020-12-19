@@ -5,8 +5,9 @@ import android.content.Intent
 
 
 /**
- *  FileSelector is a library to select File or Capture image form mobile device
+ *  FileSelector is a library to select File or Capture image form mobile device.
  *
+ *  Developed by -> Vidhey
  * */
 
 object FileSelector {
