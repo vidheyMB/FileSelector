@@ -13,7 +13,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         file_selector.setOnClickListener {
-            FileSelector.build(this, object : FileSelectorCallBack {
+            FileSelector.open(this, object : FileSelectorCallBack {
                 override fun onResponse(response: String) {
                     Log.d("TAG_Test", "onResponse: $response")
                 }

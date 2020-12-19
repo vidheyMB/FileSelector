@@ -12,7 +12,7 @@ import android.content.Intent
 
 object FileSelector {
 
-    fun build(activity: Activity, fileSelectorCallBack: FileSelectorCallBack) {
+    fun open(activity: Activity, fileSelectorCallBack: FileSelectorCallBack) {
         val intent = Intent(activity, FileSelectorActivity::class.java)
         intent.putExtra("interfaceCall",fileSelectorCallBack)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP

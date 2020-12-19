@@ -30,7 +30,7 @@ class FileSelectorActivity : AppCompatActivity() {
         private lateinit var fileSelectorCallBack:FileSelectorCallBack
 
         /** camera image uri (contains path for file destination) */
-        lateinit var outputFileUri:Uri
+        private lateinit var outputFileUri:Uri
 
         /** Start Intent resquest code for result fetch */
         private const val OPEN_DOCUMENT_REQUEST_CODE = 190
