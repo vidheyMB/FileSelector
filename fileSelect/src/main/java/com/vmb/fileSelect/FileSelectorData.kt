@@ -1,9 +1,11 @@
 package com.vmb.fileSelect
 
+import android.net.Uri
 import java.io.Serializable
 
 data class FileSelectorData(
-    val responseInBase64: String,
-    val fileName: String,
-    val extension: String
+    var uri: String?=null,
+    var responseInBase64: String?=null,
+    var fileName: String?=null,
+    var extension: String?=null
 ):Serializable
