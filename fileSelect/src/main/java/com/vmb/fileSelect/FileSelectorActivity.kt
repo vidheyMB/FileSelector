@@ -4,13 +4,17 @@ import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.Parcelable
 import android.provider.MediaStore
 import android.util.Base64
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -123,10 +127,10 @@ class FileSelectorActivity : AppCompatActivity() {
             putExtra(
                 Intent.EXTRA_MIME_TYPES, arrayOf(
                     "application/pdf", // .pdf
-                    "application/vnd.oasis.opendocument.text", // .odt
                     "text/plain", // .txt
-                    "image/*" ,// images
+                    "image/*",// images
                     "application/xlxs", // .xlxs
+                    "application/docx", // .Ms office
                 )
             )
         }
@@ -145,16 +149,21 @@ class FileSelectorActivity : AppCompatActivity() {
                 if (uri != null) {
                     // File extension
                     val fileExtension = uri?.path?.substringAfterLast(".")
+                    // File name
+                    val fileName = uri?.path?.substringAfterLast("/")
                     // convert uri to base64 string
                     GlobalScope.launch {
-                        val base64String = convertToString(uri!!)
+                        val base64String = convertToString(uri!!, fileExtension!!)
 
                         // return the result back to activity
                         val intent = Intent()
-                        intent.putExtra(FileSelector.FileSelectorData, FileSelectorData(
-                            responseInBase64 = base64String,
-                            extension = fileExtension!!
-                        ))
+                        intent.putExtra(
+                            FileSelector.FileSelectorData, FileSelectorData(
+                                responseInBase64 = base64String,
+                                fileName = fileName!!,
+                                extension = fileExtension!!
+                            )
+                        )
                         setResult(FileSelector.FileSelectorResult, intent)
                         // finish activity
                         finish()
@@ -170,17 +179,29 @@ class FileSelectorActivity : AppCompatActivity() {
 
 
     /** Convert any Uri to base64 string*/
-    private fun convertToString(uri: Uri): String {
+    private fun convertToString(uri: Uri, extension: String): String {
         val uriString = uri.toString()
-        Log.d("data", "onActivityResult: uri$uriString")
+        Log.d("data", "onActivityResult: uri = $uriString")
 
+        /** Return Base64 String */
         return try {
-            val inputStream: InputStream = contentResolver.openInputStream(uri)!!
-            val bytes = getBytes(inputStream)
-            Log.d("data", "onActivityResult: bytes size=" + bytes!!.size)
-            val ansValue = Base64.encodeToString(bytes, Base64.DEFAULT)
-            Log.d("data", "onActivityResult: Base64string = $ansValue")
-            ansValue // return base64 string
+
+            if (isImage(extension)) {  // For Image
+
+                val bitmap = getResizedBitmap(getCapturedImageAsBitmap(uri), 512)
+                getBitmapToBase64(bitmap) // return base64 string
+
+            } else { // For Other Files
+
+                val inputStream: InputStream = contentResolver.openInputStream(uri)!!
+                val bytes = getBytes(inputStream)
+                Log.d("data", "onActivityResult: bytes size =" + bytes!!.size)
+                val ansValue = Base64.encodeToString(bytes, Base64.DEFAULT)
+                Log.d("data", "onActivityResult: Base64string = $ansValue")
+                ansValue // return base64 string
+
+            }
+
         } catch (e: Exception) {
             e.printStackTrace()
             Log.d("error", "onActivityResult: $e")
@@ -191,7 +212,7 @@ class FileSelectorActivity : AppCompatActivity() {
 
     /** Get InputStream as ByteArray */
     @Throws(IOException::class)
-    fun getBytes(inputStream: InputStream): ByteArray? {
+    private fun getBytes(inputStream: InputStream): ByteArray? {
         val byteBuffer = ByteArrayOutputStream()
         val bufferSize = 1024
         val buffer = ByteArray(bufferSize)
@@ -200,6 +221,74 @@ class FileSelectorActivity : AppCompatActivity() {
             byteBuffer.write(buffer, 0, len)
         }
         return byteBuffer.toByteArray()
+    }
+
+    /** Get Bitmap as ByteArray */
+    private fun getBytesFromBitmap(bitmap: Bitmap): ByteArray {
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+        return byteArrayOutputStream.toByteArray()
+    }
+
+    /** Get isImage extension*/
+    private fun isImage(extension: String): Boolean {
+        /** Image Formats*/
+        val imageExtension = arrayListOf<String>()
+        imageExtension.add("tif")
+        imageExtension.add("tiff")
+        imageExtension.add("bmp")
+        imageExtension.add("jpg")
+        imageExtension.add("jpeg")
+        imageExtension.add("gif")
+        imageExtension.add("png")
+        imageExtension.add("eps")
+        imageExtension.add("raw")
+        imageExtension.add("cr2")
+        imageExtension.add("nef")
+        imageExtension.add("orf")
+        imageExtension.add("sr2")
+
+        /** Check extension is image*/
+        return imageExtension.contains(extension)
+    }
+
+    /** Get Bitmap as Base64String */
+    private fun getBitmapToBase64(bitmap: Bitmap): String {
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 10, stream) //compress to which format you want.
+        val byte_arr = stream.toByteArray()
+        return Base64.encodeToString(byte_arr, Base64.DEFAULT)
+    }
+
+    /** Get Bitmap from Uri */
+    private fun getCapturedImageAsBitmap(selectedPhotoUri: Uri): Bitmap {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val source = ImageDecoder.createSource(
+                application.contentResolver!!,
+                selectedPhotoUri
+            )
+            ImageDecoder.decodeBitmap(source)
+        } else {
+            MediaStore.Images.Media.getBitmap(
+                application.contentResolver,
+                selectedPhotoUri
+            )
+        }
+    }
+
+    /** Resize Bitmap size */
+    fun getResizedBitmap(image: Bitmap?, maxSize: Int): Bitmap {
+        var width = image?.width
+        var height = image?.height
+        val bitmapRatio = width!!.toFloat() / height!!.toFloat()
+        if (bitmapRatio > 1) {
+            width = maxSize
+            height = (width / bitmapRatio).toInt()
+        } else {
+            height = maxSize
+            width = (height * bitmapRatio).toInt()
+        }
+        return Bitmap.createScaledBitmap(image!!, width, height, true)
     }
 
 }
