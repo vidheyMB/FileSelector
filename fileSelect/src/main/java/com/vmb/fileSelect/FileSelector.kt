@@ -10,13 +10,18 @@ import android.content.Intent
  *  Developed by -> Vidhey
  * */
 
-object FileSelector {
+object FileSelector{
 
-    fun open(activity: Activity, fileSelectorCallBack: FileSelectorCallBack) {
+    // ActivityForResult Code
+    const val FileSelectorResult = 1012
+    const val FileSelectorData = "data"
+
+    fun open(activity: Activity) {
+        /** Call Intent chooser activity*/
         val intent = Intent(activity, FileSelectorActivity::class.java)
-        intent.putExtra("interfaceCall",fileSelectorCallBack)
         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-        activity.startActivity(intent)
+        activity.startActivityForResult(intent, FileSelectorResult)
+
     }
 
 }

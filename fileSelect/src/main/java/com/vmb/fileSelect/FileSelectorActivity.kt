@@ -1,7 +1,6 @@
 package com.vmb.fileSelect
 
 import android.annotation.SuppressLint
-import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -23,16 +22,13 @@ import kotlin.collections.ArrayList
 
 class FileSelectorActivity : AppCompatActivity() {
 
-    companion object{
+    companion object {
         private const val TAG = "FileSelector"
 
-        /** FileSelector callback response as base64 string */
-        private lateinit var fileSelectorCallBack:FileSelectorCallBack
-
         /** camera image uri (contains path for file destination) */
-        private lateinit var outputFileUri:Uri
+        private lateinit var outputFileUri: Uri
 
-        /** Start Intent resquest code for result fetch */
+        /** Start Intent request code for result fetch */
         private const val OPEN_DOCUMENT_REQUEST_CODE = 190
     }
 
@@ -40,19 +36,22 @@ class FileSelectorActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_file_selector)
 
-        // To retrieve object in second Activity
-        fileSelectorCallBack = intent.getSerializableExtra("interfaceCall") as FileSelectorCallBack
-
         // open document
-        openDocument()
+        openCameraOrDocument()
 
     }
 
     /** Intent chooser for selection of camera and document composer */
-    private fun openDocument() {
+    private fun openCameraOrDocument() {
 
         /** Camera chooser */
-        val cameraIntents: MutableList<Intent> = getCameraIntent()
+        val cameraIntents: MutableList<Intent> = try {
+            getCameraIntent()
+        } catch (e: Exception) {
+            Log.e(TAG, "Camera : Please check with camera permission and Storage permission")
+            e.printStackTrace()
+            mutableListOf<Intent>() // set empty list
+        }
 
         /** Document chooser */
         val openDocument = getOpenDocumentIntent()
@@ -89,7 +88,7 @@ class FileSelectorActivity : AppCompatActivity() {
                 root                          /* directory */
             )
         } catch (e: Exception) {
-            Log.e(TAG, "Camera : Please check with camera permission", )
+            Log.e(TAG, "Camera : Please check with camera permission")
             e.printStackTrace()
             // Error occurred while creating the File
             null
@@ -117,7 +116,7 @@ class FileSelectorActivity : AppCompatActivity() {
     }
 
     /** Open documents and your optionals here*/
-    private fun getOpenDocumentIntent() : Intent{
+    private fun getOpenDocumentIntent(): Intent {
         return Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "*/*"
@@ -126,7 +125,8 @@ class FileSelectorActivity : AppCompatActivity() {
                     "application/pdf", // .pdf
                     "application/vnd.oasis.opendocument.text", // .odt
                     "text/plain", // .txt
-                    "image/*" // images
+                    "image/*" ,// images
+                    "application/xlxs", // .xlxs
                 )
             )
         }
@@ -136,23 +136,32 @@ class FileSelectorActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if(resultCode == RESULT_OK){
-           if(requestCode == OPEN_DOCUMENT_REQUEST_CODE){
+        if (resultCode == RESULT_OK) {
+            if (requestCode == OPEN_DOCUMENT_REQUEST_CODE) {
 
-               // If data is null check outputFileUri
-               val uri = if(data!=null) data.data else outputFileUri
-               // File extension
-               val fileExtension = uri?.path?.substringAfterLast(".")
-               // convert uri to base64 string
-               GlobalScope.launch {
-                  val base64String = convertToString(uri!!)
-                    // callback interface
-                   fileSelectorCallBack.onResponse(base64String, fileExtension!!)
-                   // finish activity
-                   finish()
-               }
-           }
-        }else{
+                // If data is null check outputFileUri
+                val uri = if (data != null) data.data else outputFileUri
+
+                if (uri != null) {
+                    // File extension
+                    val fileExtension = uri?.path?.substringAfterLast(".")
+                    // convert uri to base64 string
+                    GlobalScope.launch {
+                        val base64String = convertToString(uri!!)
+
+                        // return the result back to activity
+                        val intent = Intent()
+                        intent.putExtra(FileSelector.FileSelectorData, FileSelectorData(
+                            responseInBase64 = base64String,
+                            extension = fileExtension!!
+                        ))
+                        setResult(FileSelector.FileSelectorResult, intent)
+                        // finish activity
+                        finish()
+                    }
+                } else finish() // finish activity
+            }
+        } else {
             // close on back press
             finish()
         }
@@ -165,7 +174,7 @@ class FileSelectorActivity : AppCompatActivity() {
         val uriString = uri.toString()
         Log.d("data", "onActivityResult: uri$uriString")
 
-      return try {
+        return try {
             val inputStream: InputStream = contentResolver.openInputStream(uri)!!
             val bytes = getBytes(inputStream)
             Log.d("data", "onActivityResult: bytes size=" + bytes!!.size)
