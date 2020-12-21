@@ -12,9 +12,9 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.Parcelable
 import android.provider.MediaStore
+import android.provider.OpenableColumns
 import android.util.Base64
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -147,21 +147,23 @@ class FileSelectorActivity : AppCompatActivity() {
                 val uri = if (data != null) data.data else outputFileUri
 
                 if (uri != null) {
-                    // File extension
-                    val fileExtension = uri?.path?.substringAfterLast(".")
                     // File name
-                    val fileName = uri?.path?.substringAfterLast("/")
+                    val fileName = getFileName(uri)
+                    // File extension
+//                    val fileExtension = uri.toString().substringAfterLast(".")
+                    val fileExtension = fileName!!.substringAfterLast(".")
+
                     // convert uri to base64 string
                     GlobalScope.launch {
-                        val base64String = convertToString(uri!!, fileExtension!!)
+                        val base64String = convertToString(uri, fileExtension)
 
                         // return the result back to activity
                         val intent = Intent()
                         intent.putExtra(
                             FileSelector.FileSelectorData, FileSelectorData(
                                 responseInBase64 = base64String,
-                                fileName = fileName!!,
-                                extension = fileExtension!!
+                                fileName = fileName,
+                                extension = fileExtension
                             )
                         )
                         setResult(FileSelector.FileSelectorResult, intent)
@@ -289,6 +291,30 @@ class FileSelectorActivity : AppCompatActivity() {
             width = (height * bitmapRatio).toInt()
         }
         return Bitmap.createScaledBitmap(image!!, width, height, true)
+    }
+
+    /** Get File name from Uri */
+    @SuppressLint("Recycle")
+    fun getFileName(uri: Uri): String? {
+        var result: String? = null
+        if (uri.scheme == "content") {
+            val cursor = contentResolver.query(uri, null, null, null, null)
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+                }
+            } finally {
+                cursor!!.close()
+            }
+        }
+        if (result == null) {
+            result = uri.path
+            val cut = result!!.lastIndexOf('/')
+            if (cut != -1) {
+                result = result.substring(cut + 1)
+            }
+        }
+        return result
     }
 
 }
