@@ -25,35 +25,48 @@ import java.io.InputStream
  *  FileSelector is a library to select File or Capture image form mobile device.
  *
  *  Developed by : Vidhey
+ *  Created on : 18/12/2020
  * */
 
 object FileSelector {
 
-    // ActivityForResult Code
-    const val FileSelectorResult = 1012
-    const val FileSelectorData = "data"
+    /* Host context */
+    private lateinit var context: Context
+    /* Callback to host */
+    private lateinit var fileSelectorCallBack: FileSelectorCallBack
 
-    fun open(activity: Activity, fragment: Fragment? = null) {
-        /** Call Intent chooser activity*/
-        val intent = Intent(activity, FileSelectorActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-        if (fragment == null)
-            activity.startActivityForResult(
-                intent,
-                FileSelectorResult
-            ) // Get Result Back in Activity
-        else fragment.startActivityForResult(
-            intent,
-            FileSelectorResult
-        ) // Get Result Back in Fragment
+
+    /** call open function and get response in callback interface */
+    fun open(activity: Activity, fileSelectorCallBack: FileSelectorCallBack) {
+        this.fileSelectorCallBack = fileSelectorCallBack
+        fileSelectorIntent(activity = activity)
     }
 
 
+    /** Redirect to Intent chooser Activity */
+    private fun fileSelectorIntent(
+        activity: Activity?= null
+    ) {
+        /** Call Intent chooser activity*/
+            context = activity!!  // set Context
+
+            val intent = Intent(activity, FileSelectorActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            activity.startActivity(intent) // Call Activity
+
+    }
+
+
+    /** Get Uri from FileSelectorActivity after File / Image selected */
+    fun getUriForConverter(uri: Uri){
+        // call uri to base64 converter
+        filterSelectorConverter(context, uri)
+    }
+
     /** Convert any Uri to base64 string*/
-    fun filterSelectorConverter(
+    private fun filterSelectorConverter(
         context: Context,
-        uri: Uri,
-        fileSelectorCallBack: FileSelectorCallBack
+        uri: Uri
     ) {
         // show dialog
         ProgressDialogue.showDialog(context)
@@ -74,6 +87,7 @@ object FileSelector {
         }
 
     }
+
 
     /** Convert any Uri to base64 string*/
     private fun convertToString(context: Context, uri: Uri, extension: String): String {
@@ -126,9 +140,10 @@ object FileSelector {
         }
     }
 
+
     /** Get InputStream as ByteArray */
     @Throws(IOException::class)
-    fun getBytes(inputStream: InputStream): ByteArray? {
+    private fun getBytes(inputStream: InputStream): ByteArray? {
         val byteBuffer = ByteArrayOutputStream()
         val bufferSize = 1024
         val buffer = ByteArray(bufferSize)
@@ -139,15 +154,17 @@ object FileSelector {
         return byteBuffer.toByteArray()
     }
 
+
     /** Get Bitmap as ByteArray */
-    fun getBytesFromBitmap(bitmap: Bitmap): ByteArray {
+    private fun getBytesFromBitmap(bitmap: Bitmap): ByteArray {
         val byteArrayOutputStream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
         return byteArrayOutputStream.toByteArray()
     }
 
+
     /** Get isImage extension*/
-    fun isImage(extension: String): Boolean {
+    private fun isImage(extension: String): Boolean {
         /** Image Formats*/
         val imageExtension = arrayOf(
             "tif",
@@ -170,16 +187,18 @@ object FileSelector {
         return imageExtension.contains(extension)
     }
 
+
     /** Get Bitmap as Base64String */
-    fun getBitmapToBase64(bitmap: Bitmap): String {
+    private fun getBitmapToBase64(bitmap: Bitmap): String {
         val stream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.PNG, 10, stream) //compress to which format you want.
         val byte_arr = stream.toByteArray()
         return Base64.encodeToString(byte_arr, Base64.DEFAULT)
     }
 
+
     /** Resize Bitmap size */
-    fun getResizedBitmap(image: Bitmap?, maxSize: Int): Bitmap {
+    private fun getResizedBitmap(image: Bitmap?, maxSize: Int): Bitmap {
         var width = image?.width
         var height = image?.height
         val bitmapRatio = width!!.toFloat() / height!!.toFloat()
@@ -193,10 +212,11 @@ object FileSelector {
         return Bitmap.createScaledBitmap(image!!, width, height, true)
     }
 
+
     /** Get File name from Uri */
     @SuppressLint("Recycle")
-//    @Throws(Exception::class)
-    fun getFileName(context: Context, uri: Uri): String? {
+    @Throws(Exception::class)
+    private fun getFileName(context: Context, uri: Uri): String? {
         var result: String? = null
         if (uri.scheme == "content") {
             val cursor = context.contentResolver.query(uri, null, null, null, null)

@@ -139,7 +139,6 @@ class FileSelectorActivity : AppCompatActivity() {
                     "application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .doc & .docx
                     "application/vnd.ms-powerpoint","application/vnd.openxmlformats-officedocument.presentationml.presentation", // .ppt & .pptx
                     "application/vnd.ms-excel","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xls & .xlsx
-                    "application/csv", // .Ms office
                 )
             )
         }
@@ -156,10 +155,9 @@ class FileSelectorActivity : AppCompatActivity() {
                 val uri = if (data != null) data.data else outputFileUri
 
                 if (uri != null) {
-                    // return the result back to activity
-                    val intent = Intent()
-                    intent.putExtra(FileSelector.FileSelectorData, uri.toString())
-                    setResult(FileSelector.FileSelectorResult, intent)
+
+                    // Send uri to convert Base64 String
+                    FileSelector.getUriForConverter(uri)
                     // finish activity
                     finish()
 
@@ -171,158 +169,5 @@ class FileSelectorActivity : AppCompatActivity() {
         }
 
     }
-/*
-   *//* fun FilterSelectorData(uri: Uri) {
-        // Set progress loader visible
-        progressLayout.visibility = View.VISIBLE
-
-        // convert uri to base64 string
-        GlobalScope.launch(Dispatchers.IO) {
-            // File name
-            val fileName = getFileName(uri)
-            // File extension
-            val fileExtension = fileName!!.substringAfterLast(".")
-
-            // Convert Uri to Base64String
-            val base64String = convertToString(uri, fileExtension)
-
-            launch(Dispatchers.Main) {
-                // return the result back to activity
-                val intent = Intent()
-                intent.putExtra(
-                    FileSelector.FileSelectorData, FileSelectorData(
-                        responseInBase64 = base64String,
-                        fileName = fileName,
-                        extension = fileExtension
-                    )
-                )
-                setResult(FileSelector.FileSelectorResult, intent)
-                // finish activity
-                finish()
-            }
-
-        }
-    }*//*
-
-
-    *//** Convert any Uri to base64 string*//*
-    private fun convertToString(uri: Uri, extension: String): String {
-        val uriString = uri.toString()
-        Log.d("data", "onActivityResult: uri = $uriString")
-
-        *//** Return Base64 String *//*
-        return try {
-
-            if (isImage(extension)) {  // For Image
-
-                val bitmap = getResizedBitmap(getCapturedImageAsBitmap(uri), 512)
-                getBitmapToBase64(bitmap) // return base64 string
-
-            } else { // For Other Files
-
-                val inputStream: InputStream = contentResolver.openInputStream(uri)!!
-                val bytes = getBytes(inputStream)
-                Log.d("data", "onActivityResult: bytes size =" + bytes!!.size)
-                val ansValue = Base64.encodeToString(bytes, Base64.DEFAULT)
-                Log.d("data", "onActivityResult: Base64string = $ansValue")
-
-                inputStream.close() // close input stream
-
-                ansValue // return base64 string
-
-            }
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Log.d("error", "onActivityResult: $e")
-            ""  // return empty response
-        }
-    }
-
-
-    *//** Get InputStream as ByteArray *//*
-//    @Throws(IOException::class)
-    private fun getBytes(inputStream: InputStream): ByteArray? {
-        val byteBuffer = ByteArrayOutputStream()
-        val bufferSize = 1024
-        val buffer = ByteArray(bufferSize)
-        var len = 0
-        while (inputStream.read(buffer).also { len = it } != -1) {
-            byteBuffer.write(buffer, 0, len)
-        }
-        return byteBuffer.toByteArray()
-    }
-
-    *//** Get Bitmap as ByteArray *//*
-    private fun getBytesFromBitmap(bitmap: Bitmap): ByteArray {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
-        return byteArrayOutputStream.toByteArray()
-    }
-
-    *//** Get Bitmap as Base64String *//*
-//    @Throws(Exception::class)
-    private fun getBitmapToBase64(bitmap: Bitmap): String {
-        val stream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 10, stream) //compress to which format you want.
-        val byte_arr = stream.toByteArray()
-        return Base64.encodeToString(byte_arr, Base64.DEFAULT)
-    }
-
-    *//** Get Bitmap from Uri *//*
-    private fun getCapturedImageAsBitmap(selectedPhotoUri: Uri): Bitmap {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            val source = ImageDecoder.createSource(
-                application.contentResolver!!,
-                selectedPhotoUri
-            )
-            ImageDecoder.decodeBitmap(source)
-        } else {
-            MediaStore.Images.Media.getBitmap(
-                application.contentResolver,
-                selectedPhotoUri
-            )
-        }
-    }
-
-    *//** Resize Bitmap size *//*
-    fun getResizedBitmap(image: Bitmap?, maxSize: Int): Bitmap {
-        var width = image?.width
-        var height = image?.height
-        val bitmapRatio = width!!.toFloat() / height!!.toFloat()
-        if (bitmapRatio > 1) {
-            width = maxSize
-            height = (width / bitmapRatio).toInt()
-        } else {
-            height = maxSize
-            width = (height * bitmapRatio).toInt()
-        }
-        return Bitmap.createScaledBitmap(image!!, width, height, true)
-    }
-
-    *//** Get File name from Uri *//*
-    @SuppressLint("Recycle")
-//    @Throws(Exception::class)
-    fun getFileName(uri: Uri): String? {
-        var result: String? = null
-        if (uri.scheme == "content") {
-            val cursor = contentResolver.query(uri, null, null, null, null)
-            try {
-                if (cursor != null && cursor.moveToFirst()) {
-                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
-                }
-            } finally {
-                cursor!!.close()
-            }
-        }
-        if (result == null) {
-            result = uri.path
-            val cut = result!!.lastIndexOf('/')
-            if (cut != -1) {
-                result = result.substring(cut + 1)
-            }
-        }
-        return result
-    }*/
 
 }
