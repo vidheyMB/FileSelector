@@ -12,7 +12,6 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.util.Base64
 import android.util.Log
-import androidx.fragment.app.Fragment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -34,6 +33,8 @@ object FileSelector {
     private lateinit var context: Context
     /* Callback to host */
     private lateinit var fileSelectorCallBack: FileSelectorCallBack
+    /* Set empty data model */
+    private val fileSelectorData = FileSelectorData()
 
 
     /** call open function and get response in callback interface */
@@ -82,7 +83,13 @@ object FileSelector {
 
             launch(Dispatchers.Main) {
                 ProgressDialogue.dismissDialog() // hide dialog
-                fileSelectorCallBack.onResponse(base64String, fileName, fileExtension) // call back interface
+
+                fileSelectorData.uri = uri.toString()
+                fileSelectorData.responseInBase64 = base64String
+                fileSelectorData.fileName = fileName
+                fileSelectorData.extension = fileExtension
+
+                fileSelectorCallBack.onResponse(fileSelectorData) // call back interface
             }
         }
 
@@ -99,20 +106,30 @@ object FileSelector {
 
             if (isImage(extension)) {  // For Image
 
-                val bitmap = getResizedBitmap(getCapturedImageAsBitmap(context, uri), 512)
-                getBitmapToBase64(bitmap) // return base64 string
+                val bitmap = getResizedBitmap(getCapturedImageAsBitmap(context, uri), 512) // get resized bitmap
+                fileSelectorData.imageBitmap = bitmap //set bitmap
+                val bytes = getBytesFromBitmap(bitmap) // get bytes from bitmap
+                Log.d("data", "onActivityResult: bytes size =" + bytes!!.size)
+                fileSelectorData.bytes = bytes // set bytes
+
+                val base64StringResponse = getBitmapToBase64(bitmap) // return base64 string
+                Log.d("data", "onActivityResult: Base64string = $base64StringResponse")
+
+                base64StringResponse // return base64 string
 
             } else { // For Other Files
 
                 val inputStream: InputStream = context.contentResolver.openInputStream(uri)!!
                 val bytes = getBytes(inputStream)
                 Log.d("data", "onActivityResult: bytes size =" + bytes!!.size)
-                val ansValue = Base64.encodeToString(bytes, Base64.DEFAULT)
-                Log.d("data", "onActivityResult: Base64string = $ansValue")
+                fileSelectorData.bytes = bytes // set bytes
+
+                val base64StringResponse = Base64.encodeToString(bytes, Base64.DEFAULT)
+                Log.d("data", "onActivityResult: Base64string = $base64StringResponse")
 
                 inputStream.close() // close input stream
 
-                ansValue // return base64 string
+                base64StringResponse // return base64 string
 
             }
 
@@ -164,7 +181,7 @@ object FileSelector {
 
 
     /** Get isImage extension*/
-    private fun isImage(extension: String): Boolean {
+    fun isImage(extension: String): Boolean {
         /** Image Formats*/
         val imageExtension = arrayOf(
             "tif",
@@ -180,7 +197,8 @@ object FileSelector {
             "nef",
             "orf",
             "sr2",
-            "psd"
+            "psd",
+            "webp"
         )
 
         /** Check extension is image*/

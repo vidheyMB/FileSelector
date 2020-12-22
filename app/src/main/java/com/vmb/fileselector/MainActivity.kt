@@ -21,11 +21,11 @@ class MainActivity : AppCompatActivity() {
 
         file_selector.setOnClickListener {
             FileSelector.open(this, object : FileSelectorCallBack {
-                override fun onResponse(responseInBase64: String, fileName: String, extension: String) {
-                    base64Result = responseInBase64
-                    fileExtension = extension
+                override fun onResponse(fileSelectorData: FileSelectorData) {
+                    base64Result = fileSelectorData.responseInBase64!!
+                    fileExtension = fileSelectorData.extension!!
                     Log.d("FileSelector", "onActivityResult: $base64Result")
-                    Log.d("FileSelector", "onActivityResult: $extension")
+                    Log.d("FileSelector", "onActivityResult: $fileExtension")
                 }
             })
         }
