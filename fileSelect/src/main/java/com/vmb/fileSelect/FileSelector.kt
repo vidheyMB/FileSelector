@@ -1,10 +1,12 @@
 package com.vmb.fileSelect
 
+import android.R
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
@@ -46,7 +48,7 @@ object FileSelector {
 
     /** Redirect to Intent chooser Activity */
     private fun fileSelectorIntent(
-        activity: Activity?= null
+        activity: Activity? = null
     ) {
         /** Call Intent chooser activity*/
             context = activity!!  // set Context
@@ -108,11 +110,14 @@ object FileSelector {
 
                 val bitmap = getResizedBitmap(getCapturedImageAsBitmap(context, uri), 512) // get resized bitmap
                 fileSelectorData.imageBitmap = bitmap //set bitmap
+
+                fileSelectorData.thumbnail = fileSelectorData.imageBitmap //set thumbnail
+
                 val bytes = getBytesFromBitmap(bitmap) // get bytes from bitmap
                 Log.d("data", "onActivityResult: bytes size =" + bytes!!.size)
                 fileSelectorData.bytes = bytes // set bytes
 
-                val base64StringResponse = getBitmapToBase64(bitmap) // return base64 string
+                val base64StringResponse = Base64.encodeToString(bytes, Base64.DEFAULT) // return base64 string
                 Log.d("data", "onActivityResult: Base64string = $base64StringResponse")
 
                 base64StringResponse // return base64 string
@@ -123,6 +128,8 @@ object FileSelector {
                 val bytes = getBytes(inputStream)
                 Log.d("data", "onActivityResult: bytes size =" + bytes!!.size)
                 fileSelectorData.bytes = bytes // set bytes
+
+                fileSelectorData.thumbnail = getThumbnail(context, extension) // set thumbnail
 
                 val base64StringResponse = Base64.encodeToString(bytes, Base64.DEFAULT)
                 Log.d("data", "onActivityResult: Base64string = $base64StringResponse")
@@ -175,7 +182,7 @@ object FileSelector {
     /** Get Bitmap as ByteArray */
     private fun getBytesFromBitmap(bitmap: Bitmap): ByteArray {
         val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
+        bitmap.compress(Bitmap.CompressFormat.PNG, 10, byteArrayOutputStream)
         return byteArrayOutputStream.toByteArray()
     }
 
@@ -254,6 +261,30 @@ object FileSelector {
             }
         }
         return result
+    }
+
+
+    /** Get Bitmap from Resource drawable */
+    private fun getBitmapFromResource(context: Context, id: Int): Bitmap? {
+       return BitmapFactory.decodeResource(context.resources, id)
+    }
+
+    /** Get Thumbnail based on extensions */
+    @Throws(Exception::class)
+    fun getThumbnail(context: Context, extension: String): Bitmap? {
+        val docTypes = arrayOf("pdf", "txt", "doc", "docx", "ppt", "pptx", "xls", "xlsx")
+
+        try {
+            docTypes.forEach {
+                if(it == extension.toLowerCase()){
+                    // return bitmap of thumbnail
+                   return getBitmapFromResource(context, context.resources.getIdentifier(extension.toLowerCase(), "drawable", context.packageName))
+                }
+            }
+        } catch (e: Exception) {
+        }
+
+        return null // return null bitmap
     }
 
 }

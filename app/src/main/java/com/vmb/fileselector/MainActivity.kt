@@ -24,6 +24,10 @@ class MainActivity : AppCompatActivity() {
                 override fun onResponse(fileSelectorData: FileSelectorData) {
                     base64Result = fileSelectorData.responseInBase64!!
                     fileExtension = fileSelectorData.extension!!
+
+                    image.setImageBitmap(fileSelectorData.thumbnail)
+                    fileName.text = fileSelectorData.fileName
+
                     Log.d("FileSelector", "onActivityResult: $base64Result")
                     Log.d("FileSelector", "onActivityResult: $fileExtension")
                 }

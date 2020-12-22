@@ -10,8 +10,9 @@ data class FileSelectorData(
     var fileName: String?=null,
     var extension: String?=null,
     var bytes: ByteArray?=null,
-    var imageBitmap: Bitmap?=null
-):Serializable {
+    var imageBitmap: Bitmap?=null,
+    var thumbnail: Bitmap?=null
+) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
