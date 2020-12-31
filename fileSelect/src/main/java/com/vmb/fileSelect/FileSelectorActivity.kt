@@ -37,11 +37,18 @@ class FileSelectorActivity : AppCompatActivity() {
 
         /** Start Intent request code for result fetch */
         private const val OPEN_DOCUMENT_REQUEST_CODE = 190
+
+        /** Get file extensions for document fetch */
+        private lateinit var filesExtensions:Array<String>
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_file_selector)
+
+        if(intent!=null)
+            filesExtensions = intent.extras?.getStringArray("FileExtension")!!
+
         // initial
         progressLayout.visibility = View.GONE
 
@@ -128,18 +135,23 @@ class FileSelectorActivity : AppCompatActivity() {
 
     /** Open documents and your optionals here*/
     private fun getOpenDocumentIntent(): Intent {
+
+        if(filesExtensions.isNullOrEmpty())
+            filesExtensions.toMutableList().add("*/*")  // set default ALL files
+
         return Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "*/*"
             putExtra(
-                Intent.EXTRA_MIME_TYPES, arrayOf(
+                Intent.EXTRA_MIME_TYPES, filesExtensions
+                /* arrayOf(
                     "application/pdf", // .pdf
                     "text/plain", // .txt
                     "image/*",// images
                     "application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .doc & .docx
                     "application/vnd.ms-powerpoint","application/vnd.openxmlformats-officedocument.presentationml.presentation", // .ppt & .pptx
                     "application/vnd.ms-excel","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xls & .xlsx
-                )
+                )*/*/
             )
         }
     }

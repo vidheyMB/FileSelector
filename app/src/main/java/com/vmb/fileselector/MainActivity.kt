@@ -5,9 +5,7 @@ import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import com.vmb.fileSelect.FileSelector
-import com.vmb.fileSelect.FileSelectorCallBack
-import com.vmb.fileSelect.FileSelectorData
+import com.vmb.fileSelect.*
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -19,8 +17,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+//        ProgressDialogue.showDialog(this)
+
         file_selector.setOnClickListener {
-            FileSelector.open(this, object : FileSelectorCallBack {
+            FileSelector.requiredFileTypes(FileType.ALL)
+                .open(this, object : FileSelectorCallBack {
                 override fun onResponse(fileSelectorData: FileSelectorData) {
                     base64Result = fileSelectorData.responseInBase64!!
                     fileExtension = fileSelectorData.extension!!

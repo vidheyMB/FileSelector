@@ -1,6 +1,5 @@
 package com.vmb.fileSelect
 
-import android.R
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
@@ -14,12 +13,12 @@ import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.util.Base64
 import android.util.Log
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.coroutineContext
 
 
 /**
@@ -29,14 +28,37 @@ import java.io.InputStream
  *  Created on : 18/12/2020
  * */
 
+
+/**
+ *   File types for selection
+ * */
+enum class FileType{ PDF, IMAGES, Text, MS_WORD, MS_EXCEL, MS_POWER_POINT, ALL }
+
 object FileSelector {
+
+    //create a new Job
+    private val parentJob = Job()
+    //create a coroutine context with the job and the dispatcher
+    private val coroutineContext : CoroutineContext get() = parentJob + Dispatchers.Default
+    //create a coroutine scope with the coroutine context
+    val scope = CoroutineScope(coroutineContext)
+
 
     /* Host context */
     private lateinit var context: Context
+    private lateinit var activity: Activity
     /* Callback to host */
     private lateinit var fileSelectorCallBack: FileSelectorCallBack
     /* Set empty data model */
     private val fileSelectorData = FileSelectorData()
+    /* init file types  */
+    /** Default set to ALL files */
+    private val filesExtensions = arrayOf<String>().toMutableList()
+    /* Base64String convertible file extensions */
+    private val convertibleExtensions = arrayOf(
+        "pdf", "txt", "doc", "docx", "ppt", "pptx", "xls", "xlsx" ,
+        "bmp", "jpg", "jpeg", "gif", "png", "eps"
+    )
 
 
     /** call open function and get response in callback interface */
@@ -51,12 +73,19 @@ object FileSelector {
         activity: Activity? = null
     ) {
         /** Call Intent chooser activity*/
-            context = activity!!  // set Context
+         context = activity!!  // set Context
+         this.activity = activity!!  // set Context
 
-            val intent = Intent(activity, FileSelectorActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-            activity.startActivity(intent) // Call Activity
+        if(filesExtensions.isNullOrEmpty())
+            filesExtensions.add("*/*")  // set default ALL files
 
+         val intent = Intent(activity, FileSelectorActivity::class.java)
+         intent.putExtra("FileExtension", filesExtensions.toTypedArray())
+         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+         activity.startActivity(intent) // Call Activity
+
+        // show dialog
+        ProgressDialogue.showDialog(context)
     }
 
 
@@ -66,35 +95,45 @@ object FileSelector {
         filterSelectorConverter(context, uri)
     }
 
+
     /** Convert any Uri to base64 string*/
     private fun filterSelectorConverter(
         context: Context,
         uri: Uri
     ) {
-        // show dialog
-        ProgressDialogue.showDialog(context)
-        // convert uri to base64 string
-        GlobalScope.launch(Dispatchers.IO) {
+
+
+        scope.launch {
+
             // File name
             val fileName = getFileName(context, uri)
             // File extension
             val fileExtension = fileName!!.substringAfterLast(".")
 
-            // Convert Uri to Base64String
-            val base64String = convertToString(context, uri, fileExtension)
+            val base64String: String
+            // Convert Uri to Base64String if fileExtension present
+            if (convertibleExtensions.contains(fileExtension)) {
+                base64String = convertToString(context, uri, fileExtension)
+            } else {
+                base64String = "" // if file format not convertible to base64 than empty result send
+                fileSelectorData.thumbnail = getThumbnail(context, "etc") // set default thumbnail
+
+                Log.e("FileSelector_error ", " Followed extensions can only be converted to base64 string, but other results you can get (like: uri, etc..) -> ")
+                convertibleExtensions.forEachIndexed { index, s ->
+                    Log.e("$index ", " $s ")
+                }
+            }
+
+            fileSelectorData.uri = uri.toString()
+            fileSelectorData.responseInBase64 = base64String
+            fileSelectorData.fileName = fileName
+            fileSelectorData.extension = fileExtension
 
             launch(Dispatchers.Main) {
                 ProgressDialogue.dismissDialog() // hide dialog
-
-                fileSelectorData.uri = uri.toString()
-                fileSelectorData.responseInBase64 = base64String
-                fileSelectorData.fileName = fileName
-                fileSelectorData.extension = fileExtension
-
                 fileSelectorCallBack.onResponse(fileSelectorData) // call back interface
             }
         }
-
     }
 
 
@@ -271,8 +310,8 @@ object FileSelector {
 
     /** Get Thumbnail based on extensions */
     @Throws(Exception::class)
-    fun getThumbnail(context: Context, extension: String): Bitmap? {
-        val docTypes = arrayOf("pdf", "txt", "doc", "docx", "ppt", "pptx", "xls", "xlsx")
+    private fun getThumbnail(context: Context, extension: String): Bitmap? {
+        val docTypes = arrayOf("pdf", "txt", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "etc")
 
         try {
             docTypes.forEach {
@@ -285,6 +324,50 @@ object FileSelector {
         }
 
         return null // return null bitmap
+    }
+
+
+    /**
+     *      "application/pdf", // .pdf
+     *      "text/plain", // .txt
+     *      "image/*",// images
+     *      "application/msword","application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .doc & .docx
+     *      "application/vnd.ms-powerpoint","application/vnd.openxmlformats-officedocument.presentationml.presentation", // .ppt & .pptx
+     *      "application/vnd.ms-excel","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xls & .xlsx
+     *
+     */
+     */
+
+    /** Set required file types */
+    fun requiredFileTypes(vararg fileTypes: FileType): FileSelector{
+
+        if(fileTypes.isNullOrEmpty()){
+            /* Default set to ALL files*/
+            filesExtensions.add("*/*")
+        }else{
+            fileTypes.forEach {
+                when(it){
+                    FileType.ALL -> filesExtensions.add("*/*")
+                    FileType.PDF -> filesExtensions.add("application/pdf")
+                    FileType.Text -> filesExtensions.add("text/plain")
+                    FileType.IMAGES -> filesExtensions.add("image/*")
+                    FileType.MS_WORD -> {
+                        filesExtensions.add("application/msword")
+                        filesExtensions.add("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                    }
+                    FileType.MS_POWER_POINT -> {
+                        filesExtensions.add("application/vnd.ms-powerpoint")
+                        filesExtensions.add("application/vnd.openxmlformats-officedocument.presentationml.presentation")
+                    }
+                    FileType.MS_EXCEL -> {
+                        filesExtensions.add("application/vnd.ms-excel")
+                        filesExtensions.add("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                    }
+                }
+            }
+        }
+
+        return this
     }
 
 }
