@@ -10,7 +10,7 @@
     <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 
     <application
-        android:preserveLegacyExternalStorage="true">
+        android:requestLegacyExternalStorage="true">
         <activity android:name=".FileSelectorActivity"/>
 
         <provider
