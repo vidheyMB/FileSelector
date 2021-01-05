@@ -160,11 +160,10 @@ class FileSelectorActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if(resultCode == RESULT_CANCELED){
+        if(resultCode == RESULT_CANCELED && data == null){
             Log.e(TAG, "onActivityResult: Request Canceled")
             finish()
         }
-
 
         if (resultCode == RESULT_OK) {
             if (requestCode == OPEN_DOCUMENT_REQUEST_CODE) {
