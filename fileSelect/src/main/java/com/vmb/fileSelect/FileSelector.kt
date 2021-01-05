@@ -92,9 +92,15 @@ object FileSelector {
     /** Get Uri from FileSelectorActivity after File / Image selected */
     fun getUriForConverter(uri: Uri){
         // call uri to base64 converter
+        if(context!=null)
         filterSelectorConverter(context, uri)
+        else Log.e("FileSelector", "getUriForConverter: context is null", )
     }
 
+    fun destroy(){
+        // hide dialog
+        ProgressDialogue.dismissDialog()
+    }
 
     /** Convert any Uri to base64 string*/
     private fun filterSelectorConverter(

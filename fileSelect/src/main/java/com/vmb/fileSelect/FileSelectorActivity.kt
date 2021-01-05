@@ -161,8 +161,7 @@ class FileSelectorActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
 
         if(resultCode == RESULT_CANCELED && data == null){
-            Log.e(TAG, "onActivityResult: Request Canceled")
-            finish()
+            cancel()
         }
 
         if (resultCode == RESULT_OK) {
@@ -178,13 +177,19 @@ class FileSelectorActivity : AppCompatActivity() {
                     // finish activity
                     finish()
 
-                } else finish() // finish activity
+                } else cancel() // finish activity
             }
         } else {
             // close on back press
-            finish()
+            cancel()
         }
 
+    }
+
+    private fun cancel() {
+        Log.e(TAG, "onActivityResult: Request Canceled")
+        FileSelector.destroy()
+        finish()
     }
 
 }
