@@ -1,26 +1,25 @@
 package com.vmb.fileSelect
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ComponentName
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.os.Parcelable
 import android.provider.MediaStore
-import android.provider.OpenableColumns
-import android.util.Base64
 import android.util.Log
 import android.view.View
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_file_selector.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -31,6 +30,9 @@ class FileSelectorActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "FileSelector"
+
+        /** Request camera permission code*/
+        private const val PERMISSION_REQUEST_CODE = 101
 
         /** camera image uri (contains path for file destination) */
         private lateinit var outputFileUri: Uri
@@ -54,8 +56,14 @@ class FileSelectorActivity : AppCompatActivity() {
 
         // hide action bar
         supportActionBar?.hide()
-        // open document
-        openCameraOrDocument()
+
+        if(checkPermission()) {
+            // open document
+            openCameraOrDocument()
+        }else{
+            requestPermission()
+        }
+
 
     }
 
@@ -190,6 +198,64 @@ class FileSelectorActivity : AppCompatActivity() {
         Log.e(TAG, "onActivityResult: Request Canceled")
         FileSelector.destroy()
         finish()
+    }
+
+    /** Request Camera permission */
+
+    private fun checkPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestPermission() {
+        ActivityCompat.requestPermissions(
+            this, arrayOf(Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE),
+            PERMISSION_REQUEST_CODE
+        )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        when (requestCode) {
+            PERMISSION_REQUEST_CODE -> if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                Toast.makeText(applicationContext, "Permission Granted", Toast.LENGTH_SHORT).show()
+
+                // open document
+                openCameraOrDocument()
+
+            } else {
+                Toast.makeText(applicationContext, "Permission Denied", Toast.LENGTH_SHORT).show()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                        != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        showMessageOKCancel("You need to allow access permissions",
+                            DialogInterface.OnClickListener { dialog, which ->
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                    requestPermission()
+                                }
+                            })
+                    }
+                }
+            }
+        }
+
+    }
+
+
+    private fun showMessageOKCancel(message: String, okListener: DialogInterface.OnClickListener) {
+        AlertDialog.Builder(this)
+            .setMessage(message)
+            .setPositiveButton("OK", okListener)
+            .setNegativeButton("Cancel", DialogInterface.OnClickListener { dialog, which ->
+                cancel()
+            })
+            .create()
+            .show()
     }
 
 }
