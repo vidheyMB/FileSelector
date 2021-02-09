@@ -168,11 +168,11 @@ class FileSelectorActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if(resultCode == RESULT_CANCELED && data == null){
+        if(resultCode == RESULT_CANCELED){
+            // close on request canceled
             cancel()
-        }
 
-        if (resultCode == RESULT_OK) {
+        }else if (resultCode == RESULT_OK && data != null) {
             if (requestCode == OPEN_DOCUMENT_REQUEST_CODE) {
 
                 // If data is null check outputFileUri
