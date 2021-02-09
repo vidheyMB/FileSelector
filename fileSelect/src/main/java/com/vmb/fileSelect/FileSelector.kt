@@ -73,28 +73,36 @@ object FileSelector {
         activity: Activity? = null
     ) {
         /** Call Intent chooser activity*/
-         context = activity!!  // set Context
-         this.activity = activity!!  // set Context
+         this.context = activity!!  // set Context
+         this.activity = activity  // set Activity
 
-        if(filesExtensions.isNullOrEmpty())
-            filesExtensions.add("*/*")  // set default ALL files
+        if(this::context.isInitialized) {
 
-         val intent = Intent(activity, FileSelectorActivity::class.java)
-         intent.putExtra("FileExtension", filesExtensions.toTypedArray())
-         intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-         activity.startActivity(intent) // Call Activity
+            if (filesExtensions.isNullOrEmpty())
+                filesExtensions.add("*/*")  // set default ALL files
 
-        // show dialog
-        ProgressDialogue.showDialog(context)
+            val intent = Intent(activity, FileSelectorActivity::class.java)
+            intent.putExtra("FileExtension", filesExtensions.toTypedArray())
+            intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            activity.startActivity(intent) // Call Activity
+
+            // show dialog
+            ProgressDialogue.showDialog(context)
+
+        }else{
+            Log.e("FileSelector", "fileSelectorIntent: context is not initialized", )
+        }
     }
 
 
     /** Get Uri from FileSelectorActivity after File / Image selected */
     fun getUriForConverter(uri: Uri){
         // call uri to base64 converter
-        if(context!=null)
-        filterSelectorConverter(context, uri)
-        else Log.e("FileSelector", "getUriForConverter: context is null", )
+        if(this::context.isInitialized) {
+            filterSelectorConverter(context, uri)
+        }else{
+            Log.e("FileSelector", "getUriForConverter: context is null",)
+        }
     }
 
     fun destroy(){
@@ -107,8 +115,6 @@ object FileSelector {
         context: Context,
         uri: Uri
     ) {
-
-
         scope.launch {
 
             // File name
