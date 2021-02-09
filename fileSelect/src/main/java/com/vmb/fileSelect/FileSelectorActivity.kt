@@ -172,7 +172,7 @@ class FileSelectorActivity : AppCompatActivity() {
             // close on request canceled
             cancel()
 
-        }else if (resultCode == RESULT_OK && data != null) {
+        }else if (resultCode == RESULT_OK) {
             if (requestCode == OPEN_DOCUMENT_REQUEST_CODE) {
 
                 // If data is null check outputFileUri
