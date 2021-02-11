@@ -47,7 +47,7 @@ class FileSelectorActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_file_selector)
-
+        Log.d("TAG", "fileSelectorIntent_Track: Activity Created")
         if(intent!=null)
             filesExtensions = intent.extras?.getStringArray("FileExtension")!!
 
@@ -69,7 +69,7 @@ class FileSelectorActivity : AppCompatActivity() {
 
     /** Intent chooser for selection of camera and document composer */
     private fun openCameraOrDocument() {
-
+        Log.d("TAG", "fileSelectorIntent_Track: openCameraOrDocument called")
         /** Camera chooser */
         val cameraIntents: MutableList<Intent> = try {
             getCameraIntent()
@@ -137,7 +137,7 @@ class FileSelectorActivity : AppCompatActivity() {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri)
             cameraIntents.add(intent)
         }
-
+        Log.d("TAG", "fileSelectorIntent_Track: Camera Intent called")
         return cameraIntents
     }
 
@@ -167,7 +167,7 @@ class FileSelectorActivity : AppCompatActivity() {
     /** Get the response data and output in base64 format */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
+        Log.d("TAG", "fileSelectorIntent_Track: onActivityResult Called")
         if(resultCode == RESULT_CANCELED){
             // close on request canceled
             cancel()
@@ -176,10 +176,10 @@ class FileSelectorActivity : AppCompatActivity() {
             if (requestCode == OPEN_DOCUMENT_REQUEST_CODE) {
 
                 // If data is null check outputFileUri
-                val uri = if (data != null) data.data else outputFileUri
+                val uri = if (data != null && data.data != null) data.data else outputFileUri
 
                 if (uri != null) {
-
+                    Log.d("TAG", "fileSelectorIntent_Track: UriConverter Called")
                     // Send uri to convert Base64 String
                     FileSelector.getUriForConverter(uri)
                     // finish activity

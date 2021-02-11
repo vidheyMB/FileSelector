@@ -76,11 +76,13 @@ object FileSelector {
          this.context = activity!!  // set Context
          this.activity = activity  // set Activity
 
+        Log.d("GetObjectId", "fileSelectorObjectID: " + System.identityHashCode(FileSelector))
+
         if(this::context.isInitialized) {
 
             if (filesExtensions.isNullOrEmpty())
                 filesExtensions.add("*/*")  // set default ALL files
-
+            Log.d("TAG", "fileSelectorIntent_Track: Initialized")
             val intent = Intent(activity, FileSelectorActivity::class.java)
             intent.putExtra("FileExtension", filesExtensions.toTypedArray())
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -101,7 +103,7 @@ object FileSelector {
         if(this::context.isInitialized) {
             filterSelectorConverter(context, uri)
         }else{
-            Log.e("FileSelector", "getUriForConverter: context is null",)
+            Log.e("FileSelector", "fileSelectorIntent_Track : context is null",)
         }
     }
 
