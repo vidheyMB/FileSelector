@@ -51,9 +51,6 @@ class FileSelectorActivity : AppCompatActivity() {
         if(intent!=null)
             filesExtensions = intent.extras?.getStringArray("FileExtension")!!
 
-        // initial
-        progressLayout.visibility = View.GONE
-
         // hide action bar
         supportActionBar?.hide()
 
@@ -69,29 +66,33 @@ class FileSelectorActivity : AppCompatActivity() {
 
     /** Intent chooser for selection of camera and document composer */
     private fun openCameraOrDocument() {
-        Log.d("TAG", "fileSelectorIntent_Track: openCameraOrDocument called")
-        /** Camera chooser */
-        val cameraIntents: MutableList<Intent> = try {
-            getCameraIntent()
+        try {
+            Log.d("TAG", "fileSelectorIntent_Track: openCameraOrDocument called")
+            /** Camera chooser */
+            val cameraIntents: MutableList<Intent> = try {
+                getCameraIntent()
+            } catch (e: Exception) {
+                Log.e(TAG, "Camera : Please check with camera permission and Storage permission")
+                e.printStackTrace()
+                mutableListOf<Intent>() // set empty list
+            }
+
+            /** Document chooser */
+            val openDocument = getOpenDocumentIntent()
+
+            // Select FileSystem Options.
+            val chooserIntent = Intent.createChooser(openDocument, "Select Source")
+
+            // Add the camera options.
+            chooserIntent.putExtra(
+                Intent.EXTRA_INITIAL_INTENTS,
+                cameraIntents.toTypedArray<Parcelable>()
+            )
+            Log.d("TAG", "fileSelectorIntent_Track: startActivityForResult called")
+            startActivityForResult(chooserIntent, OPEN_DOCUMENT_REQUEST_CODE)
         } catch (e: Exception) {
-            Log.e(TAG, "Camera : Please check with camera permission and Storage permission")
-            e.printStackTrace()
-            mutableListOf<Intent>() // set empty list
+            Log.d("TAG", "fileSelectorIntent_Track: startActivityForResult After :" + e.printStackTrace())
         }
-
-        /** Document chooser */
-        val openDocument = getOpenDocumentIntent()
-
-        // Select FileSystem Options.
-        val chooserIntent = Intent.createChooser(openDocument, "Select Source")
-
-        // Add the camera options.
-        chooserIntent.putExtra(
-            Intent.EXTRA_INITIAL_INTENTS,
-            cameraIntents.toTypedArray<Parcelable>()
-        )
-
-        startActivityForResult(chooserIntent, OPEN_DOCUMENT_REQUEST_CODE)
 
     }
 
@@ -101,7 +102,7 @@ class FileSelectorActivity : AppCompatActivity() {
         // Camera.
         val cameraIntents: MutableList<Intent> = ArrayList()
 
-        // Determine Uri of camera image to save.
+      /*  // Determine Uri of camera image to save.
         val root = getExternalFilesDir(Environment.DIRECTORY_PICTURES)!!
 
         val fname: String = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
@@ -109,9 +110,9 @@ class FileSelectorActivity : AppCompatActivity() {
         // Create the File where the photo should go
         val sdImageMainDirectory = try {
             File.createTempFile(
-                "IMAGE_${fname}_",       /* prefix */
-                ".png",                 /* suffix */
-                root                          /* directory */
+                "IMAGE_${fname}_",       *//* prefix *//*
+                ".png",                 *//* suffix *//*
+                root                          *//* directory *//*
             )
         } catch (e: Exception) {
             Log.e(TAG, "Camera : Please check with camera permission")
@@ -137,6 +138,12 @@ class FileSelectorActivity : AppCompatActivity() {
             intent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri)
             cameraIntents.add(intent)
         }
+*/
+
+        //  Call internal camera activity
+        val intent = Intent(this,CameraActivity::class.java)
+        cameraIntents.add(intent)
+
         Log.d("TAG", "fileSelectorIntent_Track: Camera Intent called")
         return cameraIntents
     }

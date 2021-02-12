@@ -34,6 +34,7 @@ import kotlin.coroutines.coroutineContext
  * */
 enum class FileType{ PDF, IMAGES, Text, MS_WORD, MS_EXCEL, MS_POWER_POINT, ALL }
 
+@SuppressLint("StaticFieldLeak")
 object FileSelector {
 
     //create a new Job
