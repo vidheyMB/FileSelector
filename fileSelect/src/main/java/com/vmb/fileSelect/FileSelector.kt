@@ -360,6 +360,10 @@ object FileSelector {
             /* Default set to ALL files*/
             filesExtensions.add("*/*")
         }else{
+
+            // Clear Selected extension before new selection
+            filesExtensions.clear()
+
             fileTypes.forEach {
                 when(it){
                     FileType.ALL -> filesExtensions.add("*/*")
