@@ -15,7 +15,7 @@
 
         <activity android:name=".CameraActivity"
             android:label="Camera"
-            android:icon="@drawable/ic_camera"
+            android:icon="@drawable/ic_camera_fs"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.MaterialComponents.NoActionBar"/>
 
