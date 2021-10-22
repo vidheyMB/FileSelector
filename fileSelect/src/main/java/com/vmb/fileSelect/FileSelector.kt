@@ -60,7 +60,8 @@ object FileSelector {
         "pdf", "txt", "doc", "docx", "ppt", "pptx", "xls", "xlsx" ,
         "bmp", "jpg", "jpeg", "gif", "png", "eps"
     )
-
+    /* Set Image Size*/
+    var imageSize = 512 // Default value set to 512
 
     /** call open function and get response in callback interface */
     fun open(activity: Activity, fileSelectorCallBack: FileSelectorCallBack) {
@@ -162,7 +163,7 @@ object FileSelector {
 
             if (isImage(extension)) {  // For Image
 
-                val bitmap = getResizedBitmap(getCapturedImageAsBitmap(context, uri), 512) // get resized bitmap
+                val bitmap = getResizedBitmap(getCapturedImageAsBitmap(context, uri), imageSize) // get resized bitmap
                 fileSelectorData.imageBitmap = bitmap //set bitmap
 
                 fileSelectorData.thumbnail = fileSelectorData.imageBitmap //set thumbnail
@@ -386,6 +387,14 @@ object FileSelector {
             }
         }
 
+        return this
+    }
+
+    /* Set Image Size */
+    fun imageSize(ImageSize: Int): FileSelector{
+        if(ImageSize!=0){
+            imageSize = ImageSize
+        }
         return this
     }
 

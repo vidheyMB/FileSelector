@@ -26,7 +26,7 @@ import java.util.concurrent.Executors
 
 typealias LumaListener = (luma: Double) -> Unit
 
-class CameraActivity : AppCompatActivity() {
+class FSCameraActivity : AppCompatActivity() {
 
     private var imageCapture: ImageCapture? = null
 

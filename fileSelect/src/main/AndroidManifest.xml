@@ -13,7 +13,7 @@
 
     <application android:requestLegacyExternalStorage="true">
 
-        <activity android:name=".CameraActivity"
+        <activity android:name=".FSCameraActivity"
             android:label="Camera"
             android:icon="@drawable/ic_camera_fs"
             android:screenOrientation="portrait"

@@ -20,8 +20,8 @@ class MainActivity : AppCompatActivity() {
 //        ProgressDialogue.showDialog(this)
 
         file_selector.setOnClickListener {
-            FileSelector.
-                requiredFileTypes(FileType.ALL) // Optional
+            FileSelector.imageSize(512)
+                .requiredFileTypes(FileType.ALL) // Optional
                 .open(this, object : FileSelectorCallBack {
                 override fun onResponse(fileSelectorData: FileSelectorData) {
                     base64Result = fileSelectorData.responseInBase64!!

@@ -2,27 +2,19 @@ package com.vmb.fileSelect
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.ComponentName
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
 import android.os.Parcelable
-import android.provider.MediaStore
 import android.util.Log
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import kotlinx.android.synthetic.main.activity_file_selector.*
-import java.io.*
-import java.text.SimpleDateFormat
-import java.util.*
 import kotlin.collections.ArrayList
 
 
@@ -141,7 +133,7 @@ class FileSelectorActivity : AppCompatActivity() {
 */
 
         //  Call internal camera activity
-        val intent = Intent(this,CameraActivity::class.java)
+        val intent = Intent(this,FSCameraActivity::class.java)
         cameraIntents.add(intent)
 
         Log.d("TAG", "fileSelectorIntent_Track: Camera Intent called")
